@@ -7,6 +7,7 @@ var DIRECTION = {
 	RIGHT: 4
 };
 
+var idLocal = [];
 var rounds = [5, 5, 3, 3, 2];
 var colors = ['#1abc9c', '#2ecc71', '#3498db', '#e74c3c', '#9b59b6'];
 var access;
@@ -76,7 +77,7 @@ var Game = {
 
      // Get lists of available MIDI controllers
      	const inputs = access.inputs;
-		 const outputs = access.outputs;
+		const outputs = access.outputs;
 		inputs.forEach((input) => {
 			console.log(input.name); /* inherited property from MIDIPort */
 			input.onmidimessage = function(message) {
@@ -85,6 +86,7 @@ var Game = {
 		  })
 		outputs.forEach((output) => {
 			console.log(output.name); /* inherited property from MIDIPort */
+			idLocal.push(output.id)
 			console.log(output.id)
 			output.onmidimessage = function(message) {
 			  console.log(message.data);
@@ -169,7 +171,7 @@ var Game = {
 			console.log(this.ball.x)
 			num = convertRange(this.ball.x,[1,3000],[1,108] )
 			console.log(parseInt(num))
-			Pong.sendMiddleC(access, -642217918, parseInt(num))
+			Pong.sendMiddleC(access, idLocal[0], parseInt(num))
 			// If the ball collides with the bound limits - correct the x and y coords.
 			if (this.ball.x <= 0) {
 				Pong._resetTurn.call(this, this.paddle, this.player); 
@@ -223,7 +225,7 @@ var Game = {
 				if (this.ball.y <= this.player.y + this.player.height && this.ball.y + this.ball.height >= this.player.y) {
 					this.ball.x = (this.player.x + this.ball.width);
 					this.ball.moveX = DIRECTION.RIGHT;
-					Pong.sendMiddleC(access, -642217918, 60)
+					Pong.sendMiddleC(access, idLocal[0], 60)
 					beep1.play();
 				}
 			}
