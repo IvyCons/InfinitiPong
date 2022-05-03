@@ -11,15 +11,32 @@ var idLocal = [];
 var rounds = [5, 5, 3, 3, 2];
 var colors = ['#1abc9c', '#2ecc71', '#3498db', '#e74c3c', '#9b59b6'];
 var access;
+
+var ctx;
+// const image = document.getElementById('source');
+
 navigator.requestMIDIAccess().then(function(ace){
 	access = ace
 });
+
+var bottom = new Audio('audio/bottom.wav');
+var leftHit = new Audio('audio/leftHit.wav')
+var rightHit = new Audio('audio/rightHit.wav')
+var up = new Audio('audio/top.wav')
+var lose = new Audio('audio/lose.wav')
+
+
+var img1 = new Image(); // Image constructor
+img1.src = 'img1.png';
+img1.alt = 'alt';
+// document.body.appendChild(img1);
 // The ball object (The cube that bounces back and forth)
 var Ball = {
 	new: function (incrementedSpeed) {
 		return {
-			width: 50,
-			height: 50,
+			width: 100,
+			height: 100,
+			midi: 0,
 			x: (this.canvas.width / 2) - 9,
 			y: (this.canvas.height / 2) - 9,
 			moveX: DIRECTION.IDLE,
@@ -54,6 +71,7 @@ var Game = {
 	initialize: function () {
 		this.canvas = document.querySelector('canvas');
 		this.context = this.canvas.getContext('2d');
+		ctx = this.context;
 
 		this.canvas.width = 3500;
 		this.canvas.height = 2000;
@@ -98,7 +116,7 @@ var Game = {
 		
 	},
 	
-	sendMiddleC: function ( midiAccess, portID, pitch) {
+	sendMidi: function ( midiAccess, portID, pitch) {
 		var noteOnMessage = [0x90, pitch, 0x7f];    // note on, middle C, full velocity
 		var output = midiAccess.outputs.get(portID);
 		console.log(output)
@@ -168,10 +186,7 @@ var Game = {
 	// Update all objects (move the player, paddle, ball, increment the score, etc.)
 	update: function () {
 		if (!this.over) {
-			console.log(this.ball.x)
-			num = convertRange(this.ball.x,[1,3000],[1,108] )
-			console.log(parseInt(num))
-			Pong.sendMiddleC(access, idLocal[0], parseInt(num))
+			Pong.sendMidi(access, idLocal[0], this.ball.midi);
 			// If the ball collides with the bound limits - correct the x and y coords.
 			if (this.ball.x <= 0) {
 				Pong._resetTurn.call(this, this.paddle, this.player); 
@@ -180,8 +195,14 @@ var Game = {
 				// });
 			}
 			if (this.ball.x >= this.canvas.width - this.ball.width) Pong._resetTurn.call(this, this.player, this.paddle);
-			if (this.ball.y <= 0) this.ball.moveY = DIRECTION.DOWN;
-			if (this.ball.y >= this.canvas.height - this.ball.height) this.ball.moveY = DIRECTION.UP;
+			if (this.ball.y <= 0) {
+				this.ball.moveY = DIRECTION.DOWN;
+				up.play();
+			}
+			if (this.ball.y >= this.canvas.height - this.ball.height) {
+				this.ball.moveY = DIRECTION.UP;
+				bottom.play();
+			}
 
 			// Move player if they player.move value was updated by a keyboard event
 			if (this.player.move === DIRECTION.UP) this.player.y -= this.player.speed;
@@ -225,8 +246,7 @@ var Game = {
 				if (this.ball.y <= this.player.y + this.player.height && this.ball.y + this.ball.height >= this.player.y) {
 					this.ball.x = (this.player.x + this.ball.width);
 					this.ball.moveX = DIRECTION.RIGHT;
-					Pong.sendMiddleC(access, idLocal[0], 60)
-					beep1.play();
+					leftHit.play();
 				}
 			}
 
@@ -236,7 +256,7 @@ var Game = {
 					this.ball.x = (this.paddle.x - this.ball.width);
 					this.ball.moveX = DIRECTION.LEFT;
 
-					beep1.play();
+					rightHit.play();
 				}
 			}
 		}
@@ -258,7 +278,7 @@ var Game = {
 				this.ball.speed += 1;
 				this.round += 1;
 
-				beep3.play();
+				// beep3.play();
 			}
 		}
 		// Check to see if the paddle/AI has won the round.
@@ -310,12 +330,17 @@ var Game = {
 
 		// Draw the Ball
 		if (Pong._turnDelayIsOver.call(this)) {
-			this.context.fillRect(
-				this.ball.x,
-				this.ball.y,
-				this.ball.width,
-				this.ball.height
-			);
+			this.context.drawImage(img1, this.ball.x-this.ball.width/2, this.ball.y, this.ball.width, this.ball.height);
+			this.ball.midi = parseInt(convertRange(this.ball.x,[-20,3000],[1,108] ));
+			
+			// this.context.fillRect(
+			// 	this.ball.x,
+			// 	this.ball.y,
+			// 	this.ball.width,
+			// 	this.ball.height,
+			// 	ctx.drawImage(img1, this.ball.x, this.ball.y, this.ball.width, this.ball.height)
+				
+			// );
 		}
 
 		// Draw the net (Line in the middle)
@@ -387,6 +412,9 @@ var Game = {
 
 			// Handle down arrow and s key events
 			if (key.keyCode === 40 || key.keyCode === 83) Pong.player.move = DIRECTION.DOWN;
+
+			if (key.keyCode === 37) {Pong.ball.width += 10; Pong.ball.height += 10 }
+			if (key.keyCode === 39) {Pong.ball.width -= 10; Pong.ball.height -= 10 }
 		});
 
 		// Stop the player from moving when there are no keys being pressed.
@@ -400,7 +428,8 @@ var Game = {
 		this.timer = (new Date()).getTime();
 
 		victor.score++;
-		beep2.play();
+		// beep2.play();
+		lose.play()
 	},
 
 	// Wait for a delay to have passed after each turn.
