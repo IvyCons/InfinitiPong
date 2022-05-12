@@ -95,7 +95,7 @@ var Game = {
 		this.paddle = Paddle.new.call(this, 'right');
 		this.ball = Ball.new.call(this);
 
-		this.paddle.speed = 8;
+		// this.paddle.speed = 8;
 		this.running = this.over = false;
 		this.turn = this.paddle;
 		this.timer = this.round = 0;
@@ -200,7 +200,7 @@ var Game = {
 	// Update all objects (move the player, paddle, ball, increment the score, etc.)
 	update: function () {
 		if (!this.over) {
-			Pong.sendMidi(access, idLocal[0], this.ball.midi);
+			Pong.sendMidi(access, idLocal[1], this.ball.midi);
 			// Pong.inMidi(access, idIn[0])
 			// If the ball collides with the bound limits - correct the x and y coords.
 			if (this.ball.x <= 0) {
@@ -243,14 +243,16 @@ var Game = {
 			else if (this.ball.moveX === DIRECTION.RIGHT) this.ball.x += this.ball.speed;
 
 			// Handle paddle (AI) UP and DOWN movement
-			if (this.paddle.y > this.ball.y - (this.paddle.height / 2)) {
-				if (this.ball.moveX === DIRECTION.RIGHT) this.paddle.y -= this.paddle.speed / 1.5;
-				else this.paddle.y -= this.paddle.speed / 4;
-			}
-			if (this.paddle.y < this.ball.y - (this.paddle.height / 2)) {
-				if (this.ball.moveX === DIRECTION.RIGHT) this.paddle.y += this.paddle.speed / 1.5;
-				else this.paddle.y += this.paddle.speed / 4;
-			}
+			// if (this.paddle.y > this.ball.y - (this.paddle.height / 2)) {
+			// 	if (this.ball.moveX === DIRECTION.RIGHT) this.paddle.y -= this.paddle.speed / 1.5;
+			// 	else this.paddle.y -= this.paddle.speed / 4;
+			// }
+			// if (this.paddle.y < this.ball.y - (this.paddle.height / 2)) {
+			// 	if (this.ball.moveX === DIRECTION.RIGHT) this.paddle.y += this.paddle.speed / 1.5;
+			// 	else this.paddle.y += this.paddle.speed / 4;
+			// }
+			if (this.paddle.move === DIRECTION.UP) this.paddle.y -= this.paddle.speed;
+			else if (this.paddle.move === DIRECTION.DOWN) this.paddle.y += this.paddle.speed;
 
 			// Handle paddle (AI) wall collision
 			if (this.paddle.y >= this.canvas.height - this.paddle.height) this.paddle.y = this.canvas.height - this.paddle.height;
