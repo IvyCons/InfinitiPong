@@ -7,7 +7,19 @@ var DIRECTION = {
 	RIGHT: 4
 };
 
+window.addEventListener("gamepadconnected", function(e) {
+	const gamepad = e.gamepad;
+	console.log(`Gamepad connected at index ${gamepad.index}: ${gamepad.id}.
+				${gamepad.buttons.length} buttons, ${gamepad.axes.length} axes.`);
+  });
+setInterval(() => {
+    const myGamepad = navigator.getGamepads()[0]; // use the first gamepad
+    console.log(`Left stick at (${myGamepad.axes[0]}, ${myGamepad.axes[1]})` );
+    console.log(`Right stick at (${myGamepad.axes[2]}, ${myGamepad.axes[3]})` );
+}, 100) // print axes 10 times per second
+console.log(navigator.getGamepads());
 var idLocal = [];
+var idIn = [];
 var rounds = [5, 5, 3, 3, 2];
 var colors = ['#1abc9c', '#2ecc71', '#3498db', '#e74c3c', '#9b59b6'];
 var access;
@@ -58,7 +70,7 @@ var Paddle = {
 			y: (this.canvas.height / 2) - 35,
 			score: 0,
 			move: DIRECTION.IDLE,
-			speed: 30
+			speed: 20
 		};
 	}
 };
@@ -98,17 +110,18 @@ var Game = {
 		const outputs = access.outputs;
 		inputs.forEach((input) => {
 			console.log(input.name); /* inherited property from MIDIPort */
-			input.onmidimessage = function(message) {
-			  console.log(message.data);
-			}
+			idIn.push(input.id)
+			// input.onmidimessage = function(message) {
+			//   console.log(message.data);
+			// }
 		  })
 		outputs.forEach((output) => {
 			console.log(output.name); /* inherited property from MIDIPort */
 			idLocal.push(output.id)
 			console.log(output.id)
-			output.onmidimessage = function(message) {
-			  console.log(message.data);
-			}
+			// output.onmidimessage = function(message) {
+			//   console.log(message.data);
+			// }
 		  })
 
   });
@@ -119,7 +132,7 @@ var Game = {
 	sendMidi: function ( midiAccess, portID, pitch) {
 		var noteOnMessage = [0x90, pitch, 0x7f];    // note on, middle C, full velocity
 		var output = midiAccess.outputs.get(portID);
-		console.log(output)
+		// console.log(output)
 		output.send(noteOnMessage); // sends the message.
 	  },
 	// offMiddleC: function ( midiAccess, portID ) {
@@ -128,6 +141,7 @@ var Game = {
 	// 	console.log(output)
 	// 	output.send(noteOffMessage); // sends the message.
 	//   },
+
 
 	endGameMenu: function (text) {
 		// Change the canvas font size and color
@@ -187,6 +201,7 @@ var Game = {
 	update: function () {
 		if (!this.over) {
 			Pong.sendMidi(access, idLocal[0], this.ball.midi);
+			// Pong.inMidi(access, idIn[0])
 			// If the ball collides with the bound limits - correct the x and y coords.
 			if (this.ball.x <= 0) {
 				Pong._resetTurn.call(this, this.paddle, this.player); 
@@ -406,9 +421,17 @@ var Game = {
 				Pong.running = true;
 				window.requestAnimationFrame(Pong.loop);
 			}
-
+			var input = access.inputs.get(idIn[0]);
+			input.onmidimessage = function(message) {
+				var msg = message.data
+				if (msg[0] === 159 && msg[1] === 61 && msg[2] === 127 ) Pong.player.move = DIRECTION.UP;
+				if (msg[0] === 143 && msg[1] === 61 && msg[2] === 127 ) Pong.player.move = DIRECTION.IDLE;
+				if (msg[0] === 159 && msg[1] === 60 && msg[2] === 127 ) Pong.player.move = DIRECTION.DOWN;
+				if (msg[0] === 143 && msg[1] === 60 && msg[2] === 127 ) Pong.player.move = DIRECTION.IDLE;
+				console.log(msg);
+			  }
 			// Handle up arrow and w key events
-			if (key.keyCode === 38 || key.keyCode === 87) Pong.player.move = DIRECTION.UP;
+
 
 			// Handle down arrow and s key events
 			if (key.keyCode === 40 || key.keyCode === 83) Pong.player.move = DIRECTION.DOWN;
