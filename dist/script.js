@@ -7,17 +7,14 @@ var DIRECTION = {
 	RIGHT: 4
 };
 
-window.addEventListener("gamepadconnected", function(e) {
-	const gamepad = e.gamepad;
-	console.log(`Gamepad connected at index ${gamepad.index}: ${gamepad.id}.
-				${gamepad.buttons.length} buttons, ${gamepad.axes.length} axes.`);
-  });
-setInterval(() => {
-    const myGamepad = navigator.getGamepads()[0]; // use the first gamepad
-    console.log(`Left stick at (${myGamepad.axes[0]}, ${myGamepad.axes[1]})` );
-    console.log(`Right stick at (${myGamepad.axes[2]}, ${myGamepad.axes[3]})` );
-}, 100) // print axes 10 times per second
-console.log(navigator.getGamepads());
+// window.addEventListener("gamepadconnected", function(e) {
+// 	const gamepad = e.gamepad;
+// 	console.log(`Gamepad connected at index ${gamepad.index}: ${gamepad.id}.
+// 				${gamepad.buttons.length} buttons, ${gamepad.axes.length} axes.`);
+//   });
+
+// console.log(navigator.getGamepads());
+
 var idLocal = [];
 var idIn = [];
 var rounds = [5, 5, 3, 3, 2];
@@ -66,6 +63,7 @@ var Paddle = {
 		return {
 			width: 30,
 			height: 200,
+			midi: 0,
 			x: side === 'left' ? 150 : this.canvas.width - 150,
 			y: (this.canvas.height / 2) - 35,
 			score: 0,
@@ -291,7 +289,7 @@ var Game = {
 				this.color = this._generateRoundColor();
 				this.player.score = this.paddle.score = 0;
 				this.player.speed += 0.5;
-				this.paddle.speed += 1;
+				this.paddle.speed += 0.5;
 				this.ball.speed += 1;
 				this.round += 1;
 
@@ -433,17 +431,35 @@ var Game = {
 				console.log(msg);
 			  }
 			// Handle up arrow and w key events
-
+			
 
 			// Handle down arrow and s key events
-			if (key.keyCode === 40 || key.keyCode === 83) Pong.player.move = DIRECTION.DOWN;
+			if (key.keyCode === 38 ) Pong.paddle.move = DIRECTION.UP;
+			if (key.keyCode === 40 || key.keyCode === 83) Pong.paddle.move = DIRECTION.DOWN;
 
 			if (key.keyCode === 37) {Pong.ball.width += 10; Pong.ball.height += 10 }
 			if (key.keyCode === 39) {Pong.ball.width -= 10; Pong.ball.height -= 10 }
 		});
 
+		setInterval(() => {
+			const gamepad = navigator.getGamepads()[0]; // use the first gamepad
+			console.log(`Left stick at (${gamepad.axes[0]}, ${gamepad.axes[1]})` );
+			console.log(`Right stick at (${gamepad.axes[2]}, ${gamepad.axes[3]})` );
+			if ( gamepad.axes[3] <= -0.5){
+				Pong.paddle.move = DIRECTION.UP;
+			}else if(gamepad.axes[3] >= 0.5 ){
+				Pong.paddle.move = DIRECTION.DOWN;
+			}else{
+				Pong.paddle.move = DIRECTION.IDLE;
+			}
+		}, 100)
+
+
+		
+
 		// Stop the player from moving when there are no keys being pressed.
-		document.addEventListener('keyup', function (key) { Pong.player.move = DIRECTION.IDLE; });
+		// document.addEventListener('keyup', function (key) { Pong.player.move = DIRECTION.IDLE; });
+		// document.addEventListener('keyup', function (key) { Pong.paddle.move = DIRECTION.IDLE; });
 	},
 
 	// Reset the ball location, the player turns and set a delay before the next round begins.
