@@ -467,7 +467,7 @@ var Game = {
 		this.ball = Ball.new.call(this, this.ball.speed);
 		this.turn = loser;
 		this.timer = (new Date()).getTime();
-
+		this.color = this._generateRoundColor();
 		victor.score++;
 		// beep2.play();
 		lose.play()
