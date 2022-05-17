@@ -33,7 +33,7 @@ var leftHit = new Audio('audio/leftHit.wav')
 var rightHit = new Audio('audio/rightHit.wav')
 var lose = new Audio('audio/score/1.mp3')
 var ambient = new Audio('audio/ambient.mp3')
-var bouncy = new Audio('audio/bouncy.mp3')
+var bouncy = new Audio('audio/bouncy.wav')
 var god = new Audio('audio/god.mp3')
 const random = (min, max) => Math.floor(Math.random() * (max - min)) + min;
 
@@ -320,13 +320,13 @@ var Game = {
 				num2 = this.round + 1;
 				bkg.src = 'bkgs/bkg' + num2 + '.png';
 				if (this.round = 2) {
-					var up = new Audio('audio/top/2.mp3')
-					var bottom = new Audio('audio/bottom/2.mp3');
+					up = new Audio('audio/top/2.mp3')
+					bottom = new Audio('audio/bottom/2.mp3');
 				}
 				if (this.round = 3) {
 					this.ball.speed = 30;
-					var up = new Audio('audio/top/3.mp3')
-					var bottom = new Audio('audio/bottom/3.mp3');
+					up = new Audio('audio/top/3.mp3')
+					bottom = new Audio('audio/bottom/3.mp3');
 					bouncy.play()
 				}
 				if (this.round = 5) {
@@ -334,8 +334,8 @@ var Game = {
 					this.ball.speed = 1;
 					this.ball.height = 500;
 					this.ball.width = 500;
-					var up = new Audio('audio/top/4.mp3')
-					var bottom = new Audio('audio/bottom/4.mp3');
+					up = new Audio('audio/top/4.mp3')
+					bottom = new Audio('audio/bottom/4.mp3');
 					ambient.play()
 					god.play()
 				}
