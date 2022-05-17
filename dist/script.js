@@ -15,29 +15,57 @@ var DIRECTION = {
 
 // console.log(navigator.getGamepads());
 
+var gameSpeed = 1;
 var idLocal = [];
 var idIn = [];
-var rounds = [5, 5, 3, 3, 2];
+var rounds = [10, 10, 100, 100, 100, 100];
 var colors = ['#1abc9c', '#2ecc71', '#3498db', '#e74c3c', '#9b59b6'];
 var access;
+var ball;
 
 var ctx;
 // const image = document.getElementById('source');
 
-navigator.requestMIDIAccess().then(function(ace){
-	access = ace
-});
 
 var bottom = new Audio('audio/bottom.wav');
 var leftHit = new Audio('audio/leftHit.wav')
 var rightHit = new Audio('audio/rightHit.wav')
 var up = new Audio('audio/top.wav')
 var lose = new Audio('audio/lose.wav')
+const random = (min, max) => Math.floor(Math.random() * (max - min)) + min;
 
 
 var img1 = new Image(); // Image constructor
-img1.src = 'img1.png';
-img1.alt = 'alt';
+num = random(0,9).toString();
+img1.src = 'balls/ball' + num + '.png';
+console.log(img1.src);
+var bkg = new Image();
+num2 = 1;
+bkg.src = 'bkgs/bkg' + num2 + '.png';
+
+navigator.requestMIDIAccess().then(function(access) {
+	access = access;
+
+	// Get lists of available MIDI controllers
+		const inputs = access.inputs;
+	   const outputs = access.outputs;
+	   inputs.forEach((input) => {
+		   console.log(input.name); /* inherited property from MIDIPort */
+		   idIn.push(input.id)
+		   input.onmidimessage = function(message) {
+			 console.log(message.data);
+		   }
+		 })
+	   outputs.forEach((output) => {
+		   console.log(output.name); /* inherited property from MIDIPort */
+		   idLocal.push(output.id)
+		   console.log(output.id)
+		   output.onmidimessage = function(message) {
+			 console.log(message.data);
+		   }
+		 })
+
+ });
 // document.body.appendChild(img1);
 // The ball object (The cube that bounces back and forth)
 var Ball = {
@@ -45,12 +73,12 @@ var Ball = {
 		return {
 			width: 100,
 			height: 100,
-			midi: 0,
+			midi: 32,
 			x: (this.canvas.width / 2) - 9,
 			y: (this.canvas.height / 2) - 9,
 			moveX: DIRECTION.IDLE,
 			moveY: DIRECTION.IDLE,
-			speed: incrementedSpeed || 12
+			speed: incrementedSpeed || 12 * gameSpeed
 		};
 	}
 };
@@ -63,12 +91,12 @@ var Paddle = {
 		return {
 			width: 30,
 			height: 200,
-			midi: 0,
+			midi: 32,
 			x: side === 'left' ? 150 : this.canvas.width - 150,
 			y: (this.canvas.height / 2) - 35,
 			score: 0,
 			move: DIRECTION.IDLE,
-			speed: 20
+			speed: 20 * gameSpeed
 		};
 	}
 };
@@ -97,32 +125,14 @@ var Game = {
 		this.running = this.over = false;
 		this.turn = this.paddle;
 		this.timer = this.round = 0;
-		this.color = '#2c3e50';
+		this.color = '#000000';
+
+
+
+		// this.color = '#2c3e50';
 
 		Pong.menu();
 		Pong.listen();
-		navigator.requestMIDIAccess().then(function(access) {
-
-     // Get lists of available MIDI controllers
-     	const inputs = access.inputs;
-		const outputs = access.outputs;
-		inputs.forEach((input) => {
-			console.log(input.name); /* inherited property from MIDIPort */
-			idIn.push(input.id)
-			// input.onmidimessage = function(message) {
-			//   console.log(message.data);
-			// }
-		  })
-		outputs.forEach((output) => {
-			console.log(output.name); /* inherited property from MIDIPort */
-			idLocal.push(output.id)
-			console.log(output.id)
-			// output.onmidimessage = function(message) {
-			//   console.log(message.data);
-			// }
-		  })
-
-  });
 
 		
 	},
@@ -170,6 +180,7 @@ var Game = {
 	},
 
 	menu: function () {
+		
 		// Draw all the Pong objects in their current state
 		Pong.draw();
 
@@ -198,7 +209,19 @@ var Game = {
 	// Update all objects (move the player, paddle, ball, increment the score, etc.)
 	update: function () {
 		if (!this.over) {
-			Pong.sendMidi(access, idLocal[1], this.ball.midi);
+			ball = this.ball;
+			navigator.requestMIDIAccess().then(function(access) {
+			
+				// Get lists of available MIDI controllers
+				const inputs = access.inputs;
+				const outputs = access.outputs;
+				// console.log(this.ball.midi);
+				Pong.sendMidi(access, idLocal[1], ball.midi);
+				// Pong.sendMidi(access, idLocal[2], 32);
+				// Pong.sendMidi(access, idLocal[2], 32);
+
+			
+			 });
 			// Pong.inMidi(access, idIn[0])
 			// If the ball collides with the bound limits - correct the x and y coords.
 			if (this.ball.x <= 0) {
@@ -276,14 +299,14 @@ var Game = {
 			}
 		}
 
-		// Handle the end of round transition
-		// Check to see if the player won the round.
-		if (this.player.score === rounds[this.round]) {
+		if (this.player.score === rounds[this.round] || this.paddle.score === rounds[this.round] ) {
 			// Check to see if there are any more rounds/levels left and display the victory screen if
 			// there are not.
+			// Handle the end of round transition
+			// Check to see if the player won the round.
 			if (!rounds[this.round + 1]) {
 				this.over = true;
-				setTimeout(function () { Pong.endGameMenu('Winner!'); }, 1000);
+				setTimeout(function () { Pong.end4GameMenu('Winner!'); }, 1000);
 			} else {
 				// If there is another round, reset all the values and increment the round number.
 				this.color = this._generateRoundColor();
@@ -292,15 +315,20 @@ var Game = {
 				this.paddle.speed += 0.5;
 				this.ball.speed += 1;
 				this.round += 1;
-
+				num2 = this.round + 1;
+				bkg.src = 'bkgs/bkg' + num2 + '.png';
 				// beep3.play();
 			}
 		}
-		// Check to see if the paddle/AI has won the round.
-		else if (this.paddle.score === rounds[this.round]) {
-			this.over = true;
-			setTimeout(function () { Pong.endGameMenu('Game Over!'); }, 1000);
-		}
+		// if (this.player.score === rounds[this.round]) {
+		// 	// Check to see if there are any more rounds/levels left and display the victory screen if
+		// 	// there are not.
+		// }
+		// // Check to see if the paddle/AI has won the round.
+		// else if (this.paddle.score === rounds[this.round]) {
+		// 	this.over = true;
+		// 	setTimeout(function () { Pong.endGameMenu('Game Over!'); }, 1000);
+		// }
 	},
 
 	// Draw the objects to the canvas element
@@ -317,12 +345,18 @@ var Game = {
 		this.context.fillStyle = this.color;
 
 		// Draw the background
-		this.context.fillRect(
-			0,
-			0,
-			this.canvas.width,
-			this.canvas.height
-		);
+		// this.context.fillRect(
+		// 	0,
+		// 	0,
+		// 	this.canvas.width,
+		// 	this.canvas.height
+		// );
+		this.context.drawImage(bkg,0,0); 
+		// Make sure the image is loaded first otherwise nothing will draw.
+		// bkg.onload = function(){
+		// 	this.context.drawImage(bkg,0,0);   
+		// 	}
+
 
 		// Set the fill style to white (For the paddles and the ball)
 		this.context.fillStyle = '#ffffff';
@@ -346,7 +380,7 @@ var Game = {
 		// Draw the Ball
 		if (Pong._turnDelayIsOver.call(this)) {
 			this.context.drawImage(img1, this.ball.x-this.ball.width/2, this.ball.y, this.ball.width, this.ball.height);
-			this.ball.midi = parseInt(convertRange(this.ball.x,[-20,3000],[1,108] ));
+			this.ball.midi = parseInt(convertRange(this.ball.x,[-100,3000],[1,108]));
 			
 			// this.context.fillRect(
 			// 	this.ball.x,
@@ -416,50 +450,74 @@ var Game = {
 
 	listen: function () {
 		document.addEventListener('keydown', function (key) {
-			// Handle the 'Press any key to begin' function and start the game.
-			if (Pong.running === false) {
-				Pong.running = true;
-				window.requestAnimationFrame(Pong.loop);
-			}
-			var input = access.inputs.get(idIn[0]);
-			input.onmidimessage = function(message) {
-				var msg = message.data
-				if (msg[0] === 159 && msg[1] === 61 && msg[2] === 127 ) Pong.player.move = DIRECTION.UP;
-				if (msg[0] === 143 && msg[1] === 61 && msg[2] === 127 ) Pong.player.move = DIRECTION.IDLE;
-				if (msg[0] === 159 && msg[1] === 60 && msg[2] === 127 ) Pong.player.move = DIRECTION.DOWN;
-				if (msg[0] === 143 && msg[1] === 60 && msg[2] === 127 ) Pong.player.move = DIRECTION.IDLE;
-				console.log(msg);
-			  }
-			// Handle up arrow and w key events
-			
-
-			// Handle down arrow and s key events
 			if (key.keyCode === 38 ) Pong.paddle.move = DIRECTION.UP;
 			if (key.keyCode === 40 || key.keyCode === 83) Pong.paddle.move = DIRECTION.DOWN;
-
+			
 			if (key.keyCode === 37) {Pong.ball.width += 10; Pong.ball.height += 10 }
 			if (key.keyCode === 39) {Pong.ball.width -= 10; Pong.ball.height -= 10 }
 		});
+					// Handle the 'Press any key to begin' function and start the game.
 
+		navigator.requestMIDIAccess().then(function(access) {
+
+		const inputs = access.inputs;
+		var input = inputs.get(idIn[0]);
+		input.onmidimessage = function(message) {
+		var msg = message.data
+		console.log(input)
+			if (msg[0] === 159 && msg[1] === 61 && msg[2] === 127 ) Pong.player.move = DIRECTION.UP;
+			if (msg[0] === 143 && msg[1] === 61 && msg[2] === 127 ) Pong.player.move = DIRECTION.IDLE;
+			if (msg[0] === 159 && msg[1] === 60 && msg[2] === 127 ) Pong.player.move = DIRECTION.DOWN;
+			if (msg[0] === 143 && msg[1] === 60 && msg[2] === 127 ) Pong.player.move = DIRECTION.IDLE;
+			console.log(msg);
+		}
+
+		var input1 = inputs.get(idIn[3]);
+		input1.onmidimessage = function(message) {
+			var msg1 = message.data;
+			if (msg1[0] === 144 && msg1[1] === 12 ) {
+				if (Pong.running === false) {
+						Pong.running = true;
+						window.requestAnimationFrame(Pong.loop);
+					}
+				}
+			if (msg1[0] === 144 && msg1[1] === 13 ) rounds[1] = this.player.score + 1;
+			if (msg1[0] === 144 && msg1[1] === 14 ) rounds[2] = this.player.score + 1;
+			if (msg1[0] === 144 && msg1[1] === 15 ) rounds[3] = this.player.score + 1;
+			if (msg1[0] === 144 && msg1[1] === 8 ) rounds[4] = this.player.score + 1;
+			if (msg1[0] === 144 && msg1[1] === 9 ) rounds[5] = this.player.score + 1;
+			console.log(msg1);
+			}
+
+ });
+
+	// Handle up arrow and w key events
+					
+		
+		// Handle down arrow and s key events
 		setInterval(() => {
 			const gamepad = navigator.getGamepads()[0]; // use the first gamepad
 			console.log(`Left stick at (${gamepad.axes[0]}, ${gamepad.axes[1]})` );
 			console.log(`Right stick at (${gamepad.axes[2]}, ${gamepad.axes[3]})` );
-			if ( gamepad.axes[3] <= -0.5){
+			if(gamepad.axes[3] <= -0.5){
 				Pong.paddle.move = DIRECTION.UP;
 			}else if(gamepad.axes[3] >= 0.5 ){
 				Pong.paddle.move = DIRECTION.DOWN;
 			}else{
 				Pong.paddle.move = DIRECTION.IDLE;
 			}
+			if(gamepad.axes[0] <= -0.5 ){Pong.ball.width += 10; Pong.ball.height += 10 }
+			if(gamepad.axes[0] >= 0.5 ) {Pong.ball.width -= 10; Pong.ball.height -= 10 }
+			if(gamepad.axes[1] <= -0.5 ){Pong.ball.speed +=0.5; Pong.paddle.speed +=0.5;}
+			if(gamepad.axes[1] >= 0.5 ) {Pong.ball.speed -=0.5; Pong.paddle.speed -=0.5; }
 		}, 100)
 
 
 		
 
 		// Stop the player from moving when there are no keys being pressed.
-		// document.addEventListener('keyup', function (key) { Pong.player.move = DIRECTION.IDLE; });
-		// document.addEventListener('keyup', function (key) { Pong.paddle.move = DIRECTION.IDLE; });
+		document.addEventListener('keyup', function (key) { Pong.player.move = DIRECTION.IDLE; });
+		document.addEventListener('keyup', function (key) { Pong.paddle.move = DIRECTION.IDLE; });
 	},
 
 	// Reset the ball location, the player turns and set a delay before the next round begins.
@@ -467,7 +525,7 @@ var Game = {
 		this.ball = Ball.new.call(this, this.ball.speed);
 		this.turn = loser;
 		this.timer = (new Date()).getTime();
-		this.color = this._generateRoundColor();
+		// this.color = this._generateRoundColor();
 		victor.score++;
 		// beep2.play();
 		lose.play()
