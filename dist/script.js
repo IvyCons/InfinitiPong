@@ -18,7 +18,7 @@ var DIRECTION = {
 var gameSpeed = 1;
 var idLocal = [];
 var idIn = [];
-var rounds = [10, 10, 10, 30, 30, 100];
+var rounds = [10, 10, 10, 10, 10, 100];
 var colors = ['#1abc9c', '#2ecc71', '#3498db', '#e74c3c', '#9b59b6'];
 var access;
 var ball;
