@@ -18,7 +18,7 @@ var DIRECTION = {
 var gameSpeed = 1;
 var idLocal = [];
 var idIn = [];
-var rounds = [10, 10, 10, 100, 100, 100];
+var rounds = [10, 10, 10, 30, 30, 100];
 var colors = ['#1abc9c', '#2ecc71', '#3498db', '#e74c3c', '#9b59b6'];
 var access;
 var ball;
@@ -471,6 +471,10 @@ var Game = {
 
 	listen: function () {
 		document.addEventListener('keydown', function (key) {
+			if (Pong.running === false) {
+				Pong.running = true;
+				window.requestAnimationFrame(Pong.loop);
+			}
 			if (key.keyCode === 38 ) Pong.paddle.move = DIRECTION.UP;
 			if (key.keyCode === 40 || key.keyCode === 83) Pong.paddle.move = DIRECTION.DOWN;
 			
