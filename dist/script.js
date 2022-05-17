@@ -313,7 +313,7 @@ var Game = {
 				// If there is another round, reset all the values and increment the round number.
 				this.round += 1;
 				num2 = this.round + 1;
-				if (this.round = 2) {
+				if (this.round === 2) {
 					bkg.src = 'bkgs/bkg' + num2 + '.png';
 					this.player.score = this.paddle.score = 0;
 					this.player.speed += 0.5;
@@ -322,7 +322,7 @@ var Game = {
 					up = new Audio('audio/top/2.mp3')
 					bottom = new Audio('audio/bottom/2.mp3');
 				}else
-				if (this.round = 3) {
+				if (this.round === 3) {
 					bkg.src = 'bkgs/bkg' + num2 + '.png';
 					this.player.score = this.paddle.score = 0;
 					this.player.speed += 0.5;
@@ -332,7 +332,7 @@ var Game = {
 					bottom = new Audio('audio/bottom/3.mp3');
 					bouncy.play()
 				}else
-				if (this.round = 5) {
+				if (this.round === 5) {
 					bkg.src = 'bkgs/bkg' + num2 + '.png';
 					img1.src = 'ball0.png';
 					this.ball.speed = 1;
