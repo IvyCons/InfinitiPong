@@ -311,29 +311,25 @@ var Game = {
 				setTimeout(function () { Pong.end4GameMenu('Winner!'); }, 1000);
 			} else {
 				// If there is another round, reset all the values and increment the round number.
+				this.color = this._generateRoundColor();
+				this.player.score = this.paddle.score = 0;
+				this.player.speed += 0.5;
+				this.paddle.speed += 0.5;
+				this.ball.speed += 1;
 				this.round += 1;
 				num2 = this.round + 1;
-				if (this.round === 2) {
-					bkg.src = 'bkgs/bkg' + num2 + '.png';
-					this.player.score = this.paddle.score = 0;
-					this.player.speed += 0.5;
-					this.paddle.speed += 0.5;
-					this.ball.speed += 1;
+				bkg.src = 'bkgs/bkg' + num2 + '.png';
+				if (this.round ===2) {
 					up = new Audio('audio/top/2.mp3')
 					bottom = new Audio('audio/bottom/2.mp3');
-				}else
+				}
 				if (this.round === 3) {
-					bkg.src = 'bkgs/bkg' + num2 + '.png';
-					this.player.score = this.paddle.score = 0;
-					this.player.speed += 0.5;
-					this.paddle.speed += 0.5;
 					this.ball.speed = 30;
 					up = new Audio('audio/top/3.mp3')
 					bottom = new Audio('audio/bottom/3.mp3');
 					bouncy.play()
-				}else
+				}
 				if (this.round === 5) {
-					bkg.src = 'bkgs/bkg' + num2 + '.png';
 					img1.src = 'ball0.png';
 					this.ball.speed = 1;
 					this.ball.height = 500;
@@ -342,12 +338,6 @@ var Game = {
 					bottom = new Audio('audio/bottom/4.mp3');
 					ambient.play()
 					god.play()
-				}else {
-					bkg.src = 'bkgs/bkg' + num2 + '.png';
-					this.player.score = this.paddle.score = 0;
-					this.player.speed += 0.5;
-					this.paddle.speed += 0.5;
-					this.ball.speed += 1;
 				}
 			}
 		}
