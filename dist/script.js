@@ -18,25 +18,28 @@ var DIRECTION = {
 var gameSpeed = 1;
 var idLocal = [];
 var idIn = [];
-var rounds = [10, 10, 100, 100, 100, 100];
+var rounds = [10, 10, 10, 100, 100, 100];
 var colors = ['#1abc9c', '#2ecc71', '#3498db', '#e74c3c', '#9b59b6'];
 var access;
 var ball;
+var score;
 
 var ctx;
 // const image = document.getElementById('source');
 
-
-var bottom = new Audio('audio/bottom.wav');
+var up = new Audio('audio/top/1.mp3')
+var bottom = new Audio('audio/bottom/1.mp3');
 var leftHit = new Audio('audio/leftHit.wav')
 var rightHit = new Audio('audio/rightHit.wav')
-var up = new Audio('audio/top.wav')
-var lose = new Audio('audio/lose.wav')
+var lose = new Audio('audio/score/1.mp3')
+var ambient = new Audio('audio/ambient.mp3')
+var bouncy = new Audio('audio/bouncy.mp3')
+var god = new Audio('audio/god.mp3')
 const random = (min, max) => Math.floor(Math.random() * (max - min)) + min;
 
 
 var img1 = new Image(); // Image constructor
-num = random(0,9).toString();
+num = random(1,9).toString();
 img1.src = 'balls/ball' + num + '.png';
 console.log(img1.src);
 var bkg = new Image();
@@ -218,7 +221,6 @@ var Game = {
 				// console.log(this.ball.midi);
 				Pong.sendMidi(access, idLocal[1], ball.midi);
 				// Pong.sendMidi(access, idLocal[2], 32);
-				// Pong.sendMidi(access, idLocal[2], 32);
 
 			
 			 });
@@ -230,7 +232,7 @@ var Game = {
 				// 	Pong.offMiddleC(access, -1585103829)
 				// });
 			}
-			if (this.ball.x >= this.canvas.width - this.ball.width) Pong._resetTurn.call(this, this.player, this.paddle);
+			if (this.ball.x >= this.canvas.width) Pong._resetTurn.call(this, this.player, this.paddle);
 			if (this.ball.y <= 0) {
 				this.ball.moveY = DIRECTION.DOWN;
 				up.play();
@@ -317,7 +319,26 @@ var Game = {
 				this.round += 1;
 				num2 = this.round + 1;
 				bkg.src = 'bkgs/bkg' + num2 + '.png';
-				// beep3.play();
+				if (this.round = 2) {
+					var up = new Audio('audio/top/2.mp3')
+					var bottom = new Audio('audio/bottom/2.mp3');
+				}
+				if (this.round = 3) {
+					this.ball.speed = 30;
+					var up = new Audio('audio/top/3.mp3')
+					var bottom = new Audio('audio/bottom/3.mp3');
+					bouncy.play()
+				}
+				if (this.round = 5) {
+					img1.src = 'ball0.png';
+					this.ball.speed = 1;
+					this.ball.height = 500;
+					this.ball.width = 500;
+					var up = new Audio('audio/top/4.mp3')
+					var bottom = new Audio('audio/bottom/4.mp3');
+					ambient.play()
+					god.play()
+				}
 			}
 		}
 		// if (this.player.score === rounds[this.round]) {
@@ -379,7 +400,7 @@ var Game = {
 
 		// Draw the Ball
 		if (Pong._turnDelayIsOver.call(this)) {
-			this.context.drawImage(img1, this.ball.x-this.ball.width/2, this.ball.y, this.ball.width, this.ball.height);
+			this.context.drawImage(img1, this.ball.x - this.ball.width, this.ball.y, this.ball.width, this.ball.height);
 			this.ball.midi = parseInt(convertRange(this.ball.x,[-100,3000],[1,108]));
 			
 			// this.context.fillRect(
@@ -481,11 +502,11 @@ var Game = {
 						window.requestAnimationFrame(Pong.loop);
 					}
 				}
-			if (msg1[0] === 144 && msg1[1] === 13 ) rounds[1] = this.player.score + 1;
-			if (msg1[0] === 144 && msg1[1] === 14 ) rounds[2] = this.player.score + 1;
-			if (msg1[0] === 144 && msg1[1] === 15 ) rounds[3] = this.player.score + 1;
-			if (msg1[0] === 144 && msg1[1] === 8 ) rounds[4] = this.player.score + 1;
-			if (msg1[0] === 144 && msg1[1] === 9 ) rounds[5] = this.player.score + 1;
+			if (msg1[0] === 144 && msg1[1] === 13 ) rounds[1] = score + 1;
+			if (msg1[0] === 144 && msg1[1] === 14 ) rounds[2] = score + 1;
+			if (msg1[0] === 144 && msg1[1] === 15 ) rounds[3] = score + 1;
+			if (msg1[0] === 144 && msg1[1] === 8 ) rounds[4] = score + 1;
+			if (msg1[0] === 144 && msg1[1] === 9 ) rounds[5] = score + 1;
 			console.log(msg1);
 			}
 
@@ -501,8 +522,14 @@ var Game = {
 			console.log(`Right stick at (${gamepad.axes[2]}, ${gamepad.axes[3]})` );
 			if(gamepad.axes[3] <= -0.5){
 				Pong.paddle.move = DIRECTION.UP;
+				navigator.requestMIDIAccess().then(function(access) {
+					Pong.sendMidi(access, idLocal[2], 63);
+				 });
 			}else if(gamepad.axes[3] >= 0.5 ){
 				Pong.paddle.move = DIRECTION.DOWN;
+				navigator.requestMIDIAccess().then(function(access) {
+					Pong.sendMidi(access, idLocal[2], 62);
+				 });
 			}else{
 				Pong.paddle.move = DIRECTION.IDLE;
 			}
@@ -529,6 +556,11 @@ var Game = {
 		victor.score++;
 		// beep2.play();
 		lose.play()
+		num = random(0,9).toString();
+		lose = new Audio('audio/score/'+ num +'.mp3')
+		navigator.requestMIDIAccess().then(function(access) {
+			Pong.sendMidi(access, idLocal[4], 1);
+		 });
 	},
 
 	// Wait for a delay to have passed after each turn.
